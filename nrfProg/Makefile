@@ -1,5 +1,5 @@
-
-LDFLAGS=-lftdi
+CFLAGS += $(shell pkg-config libftdi1 --cflags)
+LDFLAGS = $(shell pkg-config libftdi1 --libs)
 
 all: nrfProg
 

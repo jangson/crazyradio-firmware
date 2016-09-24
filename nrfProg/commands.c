@@ -39,6 +39,8 @@
 #define E_PAGE 0x52
 
 
+int cmdErasePage(int pageNo);
+
 static char buffer[3];
 
 int cmdWren() {
@@ -136,7 +138,7 @@ int cmdProgram(int addr, char *data, int len) {
 
   if (addr>30*1024) {
     printf("ERROR: Writing above 30K is disabled!\n");
-    return;
+    return -1;
   }
 
   if((addr+len)>30*1024) {
