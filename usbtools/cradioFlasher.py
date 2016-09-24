@@ -136,7 +136,12 @@ class CradioFlasher(QtGui.QMainWindow):
         if not self.image_ok:
             logger.error("Image not verified, not flashing!")
             return
+
+        # jason.kim 2016.9.24 Always reload the file
+        self.analyze_binary()
         
+        # jason.kim 2016.9.24 Remove warning dialog
+        """
         if not self.image_checked or not self.image_verified:
             reply = QtGui.QMessageBox.question(self, 'Crazyradio image not verified',
                       "This image is not verified. If it is not able to retart "
@@ -146,6 +151,7 @@ class CradioFlasher(QtGui.QMainWindow):
             if reply == QtGui.QMessageBox.No:
                 logger.error("Aborting flash operation.")
                 return
+        """
         
         bootloader = False
         try:
