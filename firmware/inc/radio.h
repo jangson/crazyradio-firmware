@@ -38,16 +38,16 @@ enum radioMode_e
 //High level functions
 void radioInit(enum radioMode_e mode);
 void radioDeinit();
-unsigned char radioSendPacket(__xdata char *payload, char len,
-                              __xdata char *ackPayload, char *ackLen);
-void radioSendPacketNoAck(__xdata char *payload, char len);
-void radioSetChannel(char channel);
-void radioSetDataRate(unsigned char dr);
-char radioGetDataRate();
-void radioSetAddress(__xdata char* address);
-void radioSetPower(char power);
-void radioSetArd(char ard);
-void radioSetArc(char arc);
+uint8_t radioSendPacket(__xdata uint8_t *payload, uint8_t len, 
+                              __xdata uint8_t *ackPayload, uint8_t *ackLen);
+void radioSendPacketNoAck(__xdata uint8_t  *payload, uint8_t  len);
+void radioSetChannel(uint8_t channel);
+void radioSetDataRate(uint8_t dr);
+uint8_t radioGetDataRate();
+void radioSetAddress(__xdata uint8_t* address);
+void radioSetPower(uint8_t power);
+void radioSetArd(uint8_t ard);
+void radioSetArc(uint8_t arc);
 void radioSetContCarrier(bool contCarrier);
 uint8_t radioGetRpd(void);
 uint8_t radioGetTxRetry(void);
@@ -57,14 +57,14 @@ void radioSetMode(enum radioMode_e mode);
 bool radioIsRxEmpty();
 
 //Each function returns the status register
-char radioNop();
-char radioActivate();
-char radioReadReg(char addr);
-char radioWriteReg(char addr, char value);
-void radioTxPacket(__xdata char *payload, char len);
-void radioTxPacketNoAck(__xdata char *payload, char len);
-void radioAckPacket(char pipe, __xdata char* payload, char len);
-char radioRxPacket(__xdata char *payload);
+uint8_t radioNop();
+uint8_t radioActivate();
+uint8_t radioReadReg(uint8_t addr);
+uint8_t radioWriteReg(uint8_t addr, uint8_t value);
+void radioTxPacket(__xdata uint8_t *payload, uint8_t len);
+void radioTxPacketNoAck(__xdata uint8_t *payload, uint8_t len);
+void radioAckPacket(uint8_t pipe, __xdata uint8_t* payload, uint8_t len);
+uint8_t radioRxPacket(__xdata uint8_t *payload);
 
 #define ARD_RAW 0
 #define ARD_PLOAD 0x80

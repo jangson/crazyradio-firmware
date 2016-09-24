@@ -27,7 +27,7 @@
 #include "usbDescriptor.h"
 
 /* Device descriptor */
-__code const char usbDeviceDescriptor[] = {
+__code const uint8_t usbDeviceDescriptor[] = {
   18,                 //bLength
   DEVICE_DESCRIPTOR,  //bDescriptorType
   0x00, 0x02,         //bcdUSB, usb 2.0
@@ -46,11 +46,11 @@ __code const char usbDeviceDescriptor[] = {
 
 //The only configuration descriptor
 //Monolitique implementation to ease the code development
-__code const char usbConfigurationDescriptor[57] = {
+__code const uint8_t usbConfigurationDescriptor[57] = {
   /***** Configuration descriptor ******/
   9,                         //bLength
   CONFIGURATION_DESCRIPTOR,  //bDescriptorType
-#ifdef PPM_JOYSTICK
+#if defined(PPM_JOYSTICK) ||  defined(PPM_KEYBOARD)
   57,0x00,                   //wTotalLength
   2,                         //bNumInterfaces
 #else
@@ -112,11 +112,38 @@ __code const char usbConfigurationDescriptor[57] = {
   0x40, 0x00,                //wMaxPacketSize (64 bytes)
   20,                        //bInterval (20ms (50Hz update))
 #endif //PPM_JOYSTICK
+#ifdef PPM_KEYBOARD
+  /***** Interface 1 descriptor: HID Keyboard ******/
+  9,                         //bLength
+  INTERFACE_DESCRIPTOR,      //bDescriptorType
+  1,                         //bInterfaceNumber
+  0,                         //bAlternateSetting
+  1,                         //bNumEndpoint (one in)
+  0x03,                      //bInterfaceClass (HID=3)
+  0x01,                      //bInterfaceSubClass (Boot Interface Subclass)
+  0x01,                      //bInterfaceProtocol (Keyboard)
+  0,                         //iInterface
+  /***** HID Device Descriptor ******/
+  9,                         //bLength
+  HID_DESCRIPTOR,            //bDescriptorType
+  0x11, 0x01,                //bcdHID (1.10)
+  0x00,                      //bCountryCode (Not Supported)
+  0x01,                      //bNumDescriptor
+  HID_REPORT,                //bDescriptorType
+  HID_REP_DESC_SIZE_KEYBOARD, 0x00,   //wDescriptorLength (63)
+  /***** Endpoint 2 IN descriptor ******/
+  7,                         //bLength
+  ENDPOINT_DESCRIPTOR,       //bDescriptorType
+  0x82,                      //bEndpointAddess (EP2 IN)
+  0x03,                      //bmAttributes (Interrupt endpoint)
+  0x8, 0x00,                 //wMaxPacketSize (8 bytes)
+  20,                        //bInterval (20ms (200Hz update))
+#endif
 };
 
 #ifdef PPM_JOYSTICK
 //HID report descriptor for PPM Joystick
-__code const char usbHidReportDescriptor[32] = {
+__code const uint8_t usbHidReportDescriptor[32] = {
     0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
     0x09, 0x04,                    // USAGE (Joystick)
     0xa1, 0x01,                    // COLLECTION (Application)
@@ -134,6 +161,34 @@ __code const char usbHidReportDescriptor[32] = {
     0xc0,                          // END_COLLECTION
 };
 #endif //PPM_JOYSTICK
+
+#ifdef PPM_KEYBOARD 
+__code const uint8_t usbHidReportDescriptorKeyboard[HID_REP_DESC_SIZE_KEYBOARD] = {
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+    0x09, 0x06,                    // USAGE (Undefined)
+    0xa1, 0x01,                    // COLLECTION (Application)
+    0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+    0x19, 0xe0,                    //   USAGE_MINIMUM (Keyboard LeftControl)
+    0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
+    0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+    0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
+    0x95, 0x08,                    //   REPORT_COUNT (8)
+    0x75, 0x01,                    //   REPORT_SIZE (1)
+    0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
+    0x95, 0x08,                    //   REPORT_COUNT (8)
+    0x75, 0x01,                    //   REPORT_SIZE (1)
+    0x81, 0x01,                    //   INPUT (Cnst,Ary,Abs)
+    0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+    0x19, 0x00,                    //   USAGE_MINIMUM (Reserved (no event indicated))
+    0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
+    0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+    0x26, 0xff, 0x00,              //   LOGICAL_MAXIMUM (255)
+    0x95, 0x06,                    //   REPORT_COUNT (6)
+    0x75, 0x08,                    //   REPORT_SIZE (8)
+    0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
+    0xc0                           // END_COLLECTION
+};
+#endif 
 
 //String descriptor for the language
 __code char usbStringDescriptor0[4] = {

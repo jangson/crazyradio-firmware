@@ -31,6 +31,7 @@
 #include "utils.h"
 #include "usbDescriptor.h"
 #include "nRF24LU1p.h"
+#include "hal_uart.h"
 
 #define MIN(A,B) (((int)A<(int)B)?A:B)
 
@@ -318,7 +319,7 @@ void usbSetupIsr()
       return;
     }
 
-#ifdef PPM_JOYSTICK    
+#if defined(PPM_JOYSTICK) || defined(PPM_KEYBOARD)
     // HID requests
     if(SETUPBUF[1] == GET_DESCRIPTOR && (SETUPBUF[3]&0xF0)==0x20)
     {
@@ -328,8 +329,14 @@ void usbSetupIsr()
         inflow[0].buffer = usbConfigurationDescriptor+USB_HID_DESC_OFFSET;
         inflow[0].len = MIN(dLength, 9);
       } else if (SETUPBUF[3] == HID_REPORT) {
+#ifdef PPM_JOYSTICK
         inflow[0].buffer = usbHidReportDescriptor;
         inflow[0].len = MIN(dLength, sizeof(usbHidReportDescriptor));
+#endif
+#ifdef PPM_KEYBOARD 
+        inflow[0].buffer = usbHidReportDescriptorKeyboard;
+        inflow[0].len = MIN(dLength, sizeof(usbHidReportDescriptorKeyboard));
+#endif
       } else {
         EP0CS = EP0STALL; //Stall to error
         return;
@@ -341,7 +348,46 @@ void usbSetupIsr()
       EP0CS = HSNAK;
       usbBulkInIsr(0);
       return;
+    } 
+/* jason.kim Just testing
+    else if( ( SETUPBUF[0]  & 0x20 ) == 0x20 ) { // This is a class specific request D5..6: Type Class(value 1)
+        switch( SETUPBUF[1] ) // req->bRequest
+        {
+        case 0x01: // Get_Report
+            // data_temp[0] = 0;
+            // data_temp[1] = 0;
+            // data_temp[2] = 0;
+            inflow[0].buffer = data_temp;
+            inflow[0].len = 3;
+            break;
+        case 0x02: // Get_Idle
+            inflow[0].len = 0;
+            break;
+        case 0x0a: // Set_Idle
+            inflow[0].len = 0;
+            break;
+        case 0x03: // Get_Protocol
+            inflow[0].len = 0;
+            break;
+        case 0x0b: // Set_Protocol
+            inflow[0].len = 0;
+            break;
+        case 0x09: // Set_Report
+            inflow[0].len = 0;
+            break;
+        default:
+            EP0CS = EP0STALL; //Stall to error
+            return;
+        }
+      inflow[0].ptr = 0;
+      inflow[0].rdy = 1;
+
+      //Initiate the in transfert
+      EP0CS = HSNAK;
+      usbBulkInIsr(0);
+      return;
     }
+*/
 #endif //PPM_JOYSTICK
     
     //Set address

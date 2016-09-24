@@ -63,6 +63,22 @@ __sfr __at (0xBE) SSSTAT;
 
 //Interrupt basics
 __sfr __at(0xA8) IEN0;
+//+ jason.kim
+__sbit __at (0xA8) EX0;
+__sbit __at (0xA9) ET0;
+__sbit __at (0xAA) EX1;
+__sbit __at (0xAB) ET1;
+__sbit __at (0xAC) ES0;
+__sbit __at (0xAD) ET2;
+// bit 6
+__sbit __at (0xAF) EA;
+
+__sfr __at(0xAA) S0RELL;
+__sfr __at(0xBA) S0RELH;
+__sfr __at(0x87) PCON;
+//- jason.kim
+
+
 __sfr __at(0xB8) IEN1;
 __sfr __at(0xA9) IP0;
 __sfr __at(0xB9) IP1;
@@ -84,6 +100,19 @@ __sfr  __at (0x8A) TL0;
 __sfr  __at (0x8B) TL1;
 __sfr  __at (0x8C) TH0;
 __sfr  __at (0x8D) TH1;
+//+ jason.kim
+__sfr  __at (0x98) S0CON;
+__sbit __at (0x98) RI0;
+__sbit __at (0x99) TI0;
+__sbit __at (0x9A) RB80;
+__sbit __at (0x9B) TB80;
+__sbit __at (0x9C) REN0;
+__sbit __at (0x9D) SM20;
+__sbit __at (0x9E) SM1;
+__sbit __at (0x9F) SM0;
+__sfr  __at (0x99) S0BUF;
+//- jason.kim
+__sfr  __at (0xB0) P3;
 __sfr  __at (0xC8) T2CON;
 __sfr  __at (0xCC) TL2;
 __sfr  __at (0xCD) TH2;
@@ -97,6 +126,10 @@ __sfr  __at (0xC6) CCL3;
 __sfr  __at (0xC7) CCH3;
 __sfr  __at (0xCA) CRCL;
 __sfr  __at (0xCB) CRCH;
+
+//+ jason.kim
+__sfr  __at (0xD8) WDCON;
+//- jason.kim
 
 //Timer register values
 // TCON

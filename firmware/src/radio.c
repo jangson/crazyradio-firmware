@@ -57,11 +57,11 @@ void radioUpdateRfSetup(void);
 
 //Chached state of the radio
 static __xdata struct {
-  char dataRate;
-  char power;
-  char arc;
-  char ard;
-  char contCarrier;
+  uint8_t dataRate;
+  uint8_t power;
+  uint8_t arc;
+  uint8_t ard;
+  uint8_t contCarrier;
 } radioConf = {
   /*.dataRate =*/ DATA_RATE_2M,
   /*.power =*/ RADIO_POWER_0dBm,
@@ -71,14 +71,14 @@ static __xdata struct {
 };
 
 //Ack payload length by ARD step (steps of 250uS) (From nrf24l01 doc p.34)
-static __code unsigned char ardStep[3][6] = { {0, 0, 8, 16, 24, 32}, //250Kps
+static __code uint8_t ardStep[3][6] = { {0, 0, 8, 16, 24, 32}, //250Kps
                                               {15, 32},              //1Mps
                                               {5, 32},               //2Mps
                                             };
 
-static __code unsigned char setupDataRate[] = {0x20, 0x00, 0x08};
+static __code uint8_t setupDataRate[] = {0x20, 0x00, 0x08};
 
-char spiRadioSend(char dt)
+uint8_t spiRadioSend(uint8_t dt)
 {
   //Send the data
   RFDAT = dt;
@@ -93,7 +93,7 @@ char spiRadioSend(char dt)
   return RFDAT;
 }
 
-char spiRadioReceive()
+uint8_t spiRadioReceive()
 {
   return spiRadioSend(0x00);
 }
@@ -140,9 +140,9 @@ void radioDeinit()
 
 
 //Nop command, permit to get the status byte
-char radioNop()
+uint8_t radioNop()
 {
-  char status;
+  uint8_t status;
   
   RADIO_EN_CS();
   status = spiRadioSend(CMD_NOP);
@@ -153,7 +153,7 @@ char radioNop()
 
 char radioFlushTx()
 {
-  char status;
+  uint8_t status;
   
   RADIO_EN_CS();
   status = spiRadioSend(CMD_FLUSH_TX);
@@ -164,7 +164,7 @@ char radioFlushTx()
 
 char radioFlushRx()
 {
-  char status;
+  uint8_t status;
   
   RADIO_EN_CS();
   status = spiRadioSend(CMD_FLUSH_RX);
@@ -173,9 +173,9 @@ char radioFlushRx()
   return status;
 }
 
-char radioReadReg(char addr)
+uint8_t radioReadReg(uint8_t addr)
 {
-  char value;
+  uint8_t value;
   
   RADIO_EN_CS();
   spiRadioSend(CMD_R_REG | (addr&0x1F));
@@ -185,9 +185,9 @@ char radioReadReg(char addr)
   return value;
 }
 
-char radioWriteReg(char addr, char value)
+uint8_t radioWriteReg(uint8_t addr, uint8_t value)
 {
-  char status;
+  uint8_t status;
   
   RADIO_EN_CS();
   status = spiRadioSend(CMD_W_REG | (addr&0x1F));
@@ -198,7 +198,7 @@ char radioWriteReg(char addr, char value)
 }
 
 // Send a packet.
-void radioTxPacket(__xdata char *payload, char len)
+void radioTxPacket(__xdata uint8_t  *payload, uint8_t len)
 {
   int i;
 
@@ -216,7 +216,7 @@ void radioTxPacket(__xdata char *payload, char len)
 }
 
 //Send a packed in no-ack mode
-void radioTxPacketNoAck(__xdata char *payload, char len)
+void radioTxPacketNoAck(__xdata uint8_t *payload, uint8_t len)
 {
   int i;
 
@@ -234,7 +234,7 @@ void radioTxPacketNoAck(__xdata char *payload, char len)
 }
 
 //Send a packet as acknowledgment payload
-void radioAckPacket(char pipe, __xdata char* payload, char len)
+void radioAckPacket(uint8_t pipe, __xdata uint8_t* payload, uint8_t len)
 {
   int i;
 
@@ -251,7 +251,7 @@ void radioAckPacket(char pipe, __xdata char* payload, char len)
 
 //Fetch the next act payload
 //Return the payload length
-char radioRxPacket(__xdata char *payload)
+uint8_t radioRxPacket(__xdata uint8_t *payload)
 {
   int len;
   int i;
@@ -283,8 +283,8 @@ char radioRxPacket(__xdata char *payload)
 //Send a packet and receive the ACK
 //Return true in case of success.
 //Polling implementation
-unsigned char radioSendPacket(__xdata char *payload, char len, 
-                              __xdata char *ackPayload, char *ackLen)
+uint8_t radioSendPacket(__xdata uint8_t *payload, uint8_t len, 
+                              __xdata uint8_t *ackPayload, uint8_t *ackLen)
 {
   char status = 0;
   
@@ -314,7 +314,7 @@ unsigned char radioSendPacket(__xdata char *payload, char len,
 }
 
 //Send a packet and don't wait for the Acknoledge
-void radioSendPacketNoAck(__xdata char *payload, char len)
+void radioSendPacketNoAck(__xdata uint8_t *payload, uint8_t  len)
 {
   //Wait for the TX fifo not to be full
   while((radioNop()&0x01) != 0);
@@ -329,7 +329,7 @@ void radioSendPacketNoAck(__xdata char *payload, char len)
 void radioUpdateRetr()
 {
   char ard=0;
-  unsigned char nbytes;
+  uint8_t nbytes;
   
   if (radioConf.ard & ARD_PLOAD)
   {
@@ -344,7 +344,7 @@ void radioUpdateRetr()
 
 void radioUpdateRfSetup()
 {
-  unsigned char setup=0;
+  uint8_t setup=0;
   
   setup = setupDataRate[radioConf.dataRate];
   setup |= radioConf.power<<1;
@@ -356,7 +356,7 @@ void radioUpdateRfSetup()
 }
 
 //Set the radio channel.
-void radioSetChannel(char channel)
+void radioSetChannel(uint8_t channel)
 {
   //Test the input
   if(channel<0 || channel>125)
@@ -372,7 +372,7 @@ void radioSetChannel(char channel)
 }
 
 //Set the radio datarate
-void radioSetDataRate(unsigned char dr)
+void radioSetDataRate(uint8_t dr)
 {
   if (dr>=3)
     return;
@@ -383,26 +383,26 @@ void radioSetDataRate(unsigned char dr)
   radioUpdateRetr();
 }
 
-char radioGetDataRate()
+uint8_t radioGetDataRate()
 {
   return radioConf.dataRate;
 }
 
-void radioSetPower(char power)
+void radioSetPower(uint8_t power)
 {
   radioConf.power = power&0x03;
   
   radioUpdateRfSetup();
 }
 
-void radioSetArd(char ard)
+void radioSetArd(uint8_t ard)
 {
   radioConf.ard = ard;
   
   radioUpdateRetr(); 
 }
 
-void radioSetArc(char arc)
+void radioSetArc(uint8_t arc)
 {
   radioConf.arc = arc;
   
@@ -422,7 +422,7 @@ void radioSetContCarrier(bool contCarrier)
 }
 
 //Set the TX and RX address
-void radioSetAddress(__xdata char* address)
+void radioSetAddress(__xdata uint8_t* address)
 {
   int i;
 

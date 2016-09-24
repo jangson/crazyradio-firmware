@@ -1,7 +1,7 @@
 #ifndef __PINOUT_H__
 #define __PINOUT_H__
 
-#define CR_LED_RED   2
+#define CR_LED_RED   5 // jason.kim chnage 2 > 5
 #define CR_LED_GREEN 4
 
 #define CRPA_LED_RED   2

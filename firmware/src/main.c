@@ -39,6 +39,7 @@
 #ifdef PPM_JOYSTICK
 #include "ppm.h"
 #endif
+#include "hal_uart.h"
 
 //Compilation seems bugged on SDCC 3.1, imposing 3.2
 //Comment-out the three following lines only if you know what you are doing!
@@ -67,6 +68,101 @@ static bool needAck = true;
 
 static volatile unsigned char mode = MODE_LEGACY;
 
+//+ jason.kim 2016.9.24 Support serial debug
+char putchar(char c)
+{
+  hal_uart_putchar(c);
+  return c;
+}
+
+char getchar(void)
+{
+  return hal_uart_getchar();
+}
+
+void putstring(char *s)
+{
+  while(*s != 0)
+    putchar(*s++);
+}
+
+void printDetails(void)
+{
+	hal_uart_printf("REG_CONFIG %X\r\n", radioReadReg(REG_CONFIG));
+	hal_uart_printf("REG_EN_AA %X\r\n", radioReadReg(REG_EN_AA));
+	hal_uart_printf("REG_EN_RXADDR %X\r\n", radioReadReg(REG_EN_RXADDR));
+	hal_uart_printf("REG_SETUP_AW %X\r\n", radioReadReg(REG_SETUP_AW));
+	hal_uart_printf("REG_SETUP_RETR %X\r\n", radioReadReg(REG_SETUP_RETR));
+	hal_uart_printf("REG_RF_CH %X\r\n", radioReadReg(REG_RF_CH));
+	hal_uart_printf("REG_RF_SETUP %X\r\n", radioReadReg(REG_RF_SETUP));
+	hal_uart_printf("REG_OBSERVE_TX %X\r\n", radioReadReg(REG_OBSERVE_TX));
+	hal_uart_printf("REG_RPD  %X\r\n", radioReadReg(REG_RPD));
+	hal_uart_printf("REG_RX_ADDR_P01 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P02 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P03 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P04 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P05 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P01 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P02 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P03 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P04 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P05 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
+
+	hal_uart_printf("REG_RX_ADDR_P1 %X\r\n", radioReadReg(REG_RX_ADDR_P1));
+	hal_uart_printf("REG_RX_ADDR_P2 %X\r\n", radioReadReg(REG_RX_ADDR_P2));
+	hal_uart_printf("REG_RX_ADDR_P3 %X\r\n", radioReadReg(REG_RX_ADDR_P3));
+	hal_uart_printf("REG_RX_ADDR_P4 %X\r\n", radioReadReg(REG_RX_ADDR_P4));
+	hal_uart_printf("REG_RX_ADDR_P5 %X\r\n", radioReadReg(REG_RX_ADDR_P5));
+
+	hal_uart_printf("REG_TX_ADDR1 %X\r\n", radioReadReg(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR2 %X\r\n", radioReadReg(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR3 %X\r\n", radioReadReg(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR4 %X\r\n", radioReadReg(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR5 %X\r\n", radioReadReg(REG_TX_ADDR));
+
+	hal_uart_printf("REG_RX_PW_P0 %X\r\n", radioReadReg(REG_RX_PW_P0));
+	hal_uart_printf("REG_RX_PW_P1 %X\r\n", radioReadReg(REG_RX_PW_P1));
+	hal_uart_printf("REG_RX_PW_P2 %X\r\n", radioReadReg(REG_RX_PW_P2));
+	hal_uart_printf("REG_RX_PW_P3 %X\r\n", radioReadReg(REG_RX_PW_P3));
+	hal_uart_printf("REG_RX_PW_P4 %X\r\n", radioReadReg(REG_RX_PW_P4));
+	hal_uart_printf("REG_RX_PW_P5 %X\r\n", radioReadReg(REG_RX_PW_P5));
+	hal_uart_printf("REG_FIFO_STATUS %X\r\n", radioReadReg(REG_FIFO_STATUS));
+	hal_uart_printf("REG_DYNPD %X\r\n", radioReadReg(REG_DYNPD));
+	hal_uart_printf("REG_FEATURE %X\r\n", radioReadReg(REG_FEATURE));
+}
+//- jason.kim 2016.9.24 Support serial debug
+
+//+ jason.kim 2016.9.24 HID key testing
+typedef struct
+{
+  uint8_t modifiers;
+  uint8_t reserved;
+  uint8_t keys[6];
+} KeyReport;
+
+KeyReport g_KeyReport;
+void report_key(int k)
+{
+    long i;
+    ledSet(LED_RED, true);
+    if (!(IN2CS&EPBSY)) {
+        g_KeyReport.keys[0] = k;
+  	    hal_uart_printf("sizeof g_KeyReport %d\r\n", (int)sizeof(g_KeyReport));
+        memcpy(IN2BUF, &g_KeyReport, sizeof(g_KeyReport));
+        IN2BC = sizeof(g_KeyReport);
+
+        for (i=0; i<10000; i++) {
+            __asm__ (" nop");
+        }
+
+        g_KeyReport.keys[0] = 0;
+        memcpy(IN2BUF, &g_KeyReport, sizeof(g_KeyReport));
+        // while (IN2CS&EPBSY);
+        IN2BC = sizeof(g_KeyReport);
+    }
+}
+//- jason.kim 2016.9.24 HID key testing
+
 void main()
 {
   mode = MODE_LEGACY;
@@ -80,6 +176,9 @@ void main()
   ledInit(CRPA_LED_RED, CRPA_LED_GREEN);
 #endif
   ledSet(LED_GREEN | LED_RED, true);
+
+  // Initializes the UART
+  hal_uart_init(UART_BAUD_9K6);
 
   // Initialise the radio
 #ifdef CRPA
@@ -101,6 +200,8 @@ void main()
   //Wait for the USB to be addressed
   while (usbGetState() != ADDRESS);
 
+  putstring("\r\nStart nRF24 keyboard\r\n");
+
   //Reset the LEDs
   ledSet(LED_GREEN | LED_RED, false);
 
@@ -112,6 +213,15 @@ void main()
 
   while(1)
   {
+    // jason.kim 2016.9.24 Support serial debug and key testing
+    if( hal_uart_chars_available() )
+    {
+      // Echo received characters
+      // printDetails();
+      putchar(getchar());
+      report_key(0x16);
+    }
+
     if (mode == MODE_LEGACY)
     {
       // Run legacy mode

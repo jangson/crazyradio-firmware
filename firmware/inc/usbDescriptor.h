@@ -27,6 +27,8 @@
 #ifndef __USB_DESCRIPTOR_H__
 #define __USB_DESCRIPTOR_H__
 
+#include <stdint.h>
+
 //USB descriptor classes
 #define DEVICE_DESCRIPTOR 0x01
 #define CONFIGURATION_DESCRIPTOR 0x02
@@ -40,9 +42,17 @@
 
 
 //Descriptors instanciated in usbDescriptor.c
-extern __code const char usbDeviceDescriptor[];
-extern __code const char usbConfigurationDescriptor[57];
-extern __code const char usbHidReportDescriptor[32];
+extern __code const uint8_t usbDeviceDescriptor[];
+extern __code const uint8_t usbConfigurationDescriptor[57];
+
+#ifdef PPM_JOYSTICK
+extern __code const uint8_t usbHidReportDescriptor[32];
+#endif
+#ifdef PPM_KEYBOARD 
+#define HID_REP_DESC_SIZE_KEYBOARD   46
+extern __code const uint8_t usbHidReportDescriptorKeyboard[HID_REP_DESC_SIZE_KEYBOARD];
+#endif
+
 extern __code char usbStringDescriptor0[4];
 extern __code char usbStringDescriptor1[18];
 extern __code char usbStringDescriptor2[];

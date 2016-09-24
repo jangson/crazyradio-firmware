@@ -11,12 +11,23 @@ LDFLAGS = --xram-loc 0x8000 --xram-size 2048 --model-large
 
 VPATH += src/ bin/
 
-OBJS = main.rel radio.rel usb.rel usbDescriptor.rel led.rel utils.rel
+OBJS = main.rel radio.rel usb.rel usbDescriptor.rel led.rel utils.rel hal_uart.rel
+
+# jason.kim 2016.9.24 Support HID keyboard
+PPM_KEYBOARD = 1
+# PPM_JOYSTICK = 1
 
 ifdef PPM_JOYSTICK
 ifneq ($(PPM_JOYSTICK), 0)
   OBJS += ppm.rel
   CFLAGS += -DPPM_JOYSTICK
+endif
+endif
+
+# jason.kim 2016.9.24 Support HID keyboard
+ifdef PPM_KEYBOARD
+ifneq ($(PPM_KEYBOARD), 0)
+  CFLAGS += -DPPM_KEYBOARD
 endif
 endif
 
