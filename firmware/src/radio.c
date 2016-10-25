@@ -27,6 +27,7 @@
 #include "nRF24LU1p.h"
 #include "nRF24L01.h"
 #include "utils.h"
+#include "hal_uart.h"
 
 #include "radio.h"
 #include "usb.h"
@@ -104,6 +105,13 @@ void radioInit(enum radioMode_e mode)
   // Clock the radio and enable the radio SPI
   RFCON = 0x06;
   RFCTL = 0x10;  //SPI enable @8MHz
+
+  // jason.kim adds initial value because sometimes global variables is not initialized by compiler options like '--no-xinit-opt' 
+  radioConf.dataRate = DATA_RATE_2M;
+  radioConf.power = RADIO_POWER_0dBm;
+  radioConf.arc = 3;
+  radioConf.ard = ARD_PLOAD | 32;
+  radioConf.contCarrier = 0;
 
   switch (mode)
   {
@@ -359,7 +367,7 @@ void radioUpdateRfSetup()
 void radioSetChannel(uint8_t channel)
 {
   //Test the input
-  if(channel<0 || channel>125)
+  if(channel>125)
     return;
    
   //Change the channel
@@ -472,3 +480,98 @@ bool radioIsRxEmpty()
 {
   return radioReadReg(REG_FIFO_STATUS)&FIFO_STATUS_RX_EMPTY;
 }
+
+//+ jason.kim 2016.10.25 New APIs
+bool radioIsRxReady(uint8_t *pipe)
+{
+  uint8_t status;
+  if (!(radioReadReg(REG_FIFO_STATUS)&FIFO_STATUS_RX_EMPTY)) {
+    if ( pipe ){
+	   status = radioNop();
+       // hal_uart_printf("status %x\r\n", status);
+      *pipe = ( status >> 1 ) & 0x7;
+      return true;
+  	}
+  }
+  return false;
+}
+
+void radioSetAutoAck(bool enable)
+{
+  if ( enable )
+    radioWriteReg(REG_EN_AA, 0b111111);
+  else
+    radioWriteReg(REG_EN_AA, 0);
+}
+
+void radioEnableDynamicPayloads(void)
+{
+  hal_uart_printf("REG_FEATURE %x\r\n", radioReadReg(REG_FEATURE) );
+  radioWriteReg(REG_FEATURE, radioReadReg(REG_FEATURE) | (1<<2)); // EN_DPL
+  hal_uart_printf("REG_FEATURE %x\r\n", radioReadReg(REG_FEATURE) );
+  radioWriteReg(REG_DYNPD, radioReadReg(REG_DYNPD)|(0x3f)); // DPL_P0~5
+}
+
+void radioEnableAckPayload(void)
+{
+  hal_uart_printf("REG_FEATURE2 %x\r\n", radioReadReg(REG_FEATURE) );
+  radioWriteReg(REG_FEATURE, radioReadReg(REG_FEATURE) | ((1<<2) | (1<<1))); // EN_DPL and EN_ACK_PAY
+  hal_uart_printf("REG_FEATURE2 %x\r\n", radioReadReg(REG_FEATURE) );
+  radioWriteReg(REG_DYNPD, radioReadReg(REG_DYNPD)|(0x3)); // DPL_P0~1
+}
+
+void printDetails(void)
+{
+	hal_uart_printf("REG_CONFIG %X\r\n", radioReadReg(REG_CONFIG));
+	hal_uart_printf("REG_EN_AA %X\r\n", radioReadReg(REG_EN_AA));
+	hal_uart_printf("REG_EN_RXADDR %X\r\n", radioReadReg(REG_EN_RXADDR));
+	hal_uart_printf("REG_SETUP_AW %X\r\n", radioReadReg(REG_SETUP_AW));
+	hal_uart_printf("REG_SETUP_RETR %X\r\n", radioReadReg(REG_SETUP_RETR));
+	hal_uart_printf("REG_RF_CH %X\r\n", radioReadReg(REG_RF_CH));
+	hal_uart_printf("REG_RF_SETUP %X\r\n", radioReadReg(REG_RF_SETUP));
+	hal_uart_printf("REG_OBSERVE_TX %X\r\n", radioReadReg(REG_OBSERVE_TX));
+	hal_uart_printf("REG_RPD  %X\r\n", radioReadReg(REG_RPD));
+
+    RADIO_EN_CS();
+    spiRadioSend(CMD_R_REG | (REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P01 %X\r\n", spiRadioSend(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P02 %X\r\n", spiRadioSend(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P03 %X\r\n", spiRadioSend(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P04 %X\r\n", spiRadioSend(REG_RX_ADDR_P0));
+	hal_uart_printf("REG_RX_ADDR_P05 %X\r\n", spiRadioSend(REG_RX_ADDR_P0));
+    RADIO_DIS_CS();
+
+    RADIO_EN_CS();
+    spiRadioSend(CMD_R_REG | (REG_RX_ADDR_P1));
+	hal_uart_printf("REG_RX_ADDR_P11 %X\r\n", spiRadioSend(REG_RX_ADDR_P1));
+	hal_uart_printf("REG_RX_ADDR_P12 %X\r\n", spiRadioSend(REG_RX_ADDR_P1));
+	hal_uart_printf("REG_RX_ADDR_P13 %X\r\n", spiRadioSend(REG_RX_ADDR_P1));
+	hal_uart_printf("REG_RX_ADDR_P14 %X\r\n", spiRadioSend(REG_RX_ADDR_P1));
+	hal_uart_printf("REG_RX_ADDR_P15 %X\r\n", spiRadioSend(REG_RX_ADDR_P1));
+    RADIO_DIS_CS();
+
+	hal_uart_printf("REG_RX_ADDR_P2 %X\r\n", radioReadReg(REG_RX_ADDR_P2));
+	hal_uart_printf("REG_RX_ADDR_P3 %X\r\n", radioReadReg(REG_RX_ADDR_P3));
+	hal_uart_printf("REG_RX_ADDR_P4 %X\r\n", radioReadReg(REG_RX_ADDR_P4));
+	hal_uart_printf("REG_RX_ADDR_P5 %X\r\n", radioReadReg(REG_RX_ADDR_P5));
+
+    RADIO_EN_CS();
+    spiRadioSend(CMD_R_REG | (REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR1 %X\r\n", spiRadioSend(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR2 %X\r\n", spiRadioSend(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR3 %X\r\n", spiRadioSend(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR4 %X\r\n", spiRadioSend(REG_TX_ADDR));
+	hal_uart_printf("REG_TX_ADDR5 %X\r\n", spiRadioSend(REG_TX_ADDR));
+    RADIO_DIS_CS();
+
+	hal_uart_printf("REG_RX_PW_P0 %X\r\n", radioReadReg(REG_RX_PW_P0));
+	hal_uart_printf("REG_RX_PW_P1 %X\r\n", radioReadReg(REG_RX_PW_P1));
+	hal_uart_printf("REG_RX_PW_P2 %X\r\n", radioReadReg(REG_RX_PW_P2));
+	hal_uart_printf("REG_RX_PW_P3 %X\r\n", radioReadReg(REG_RX_PW_P3));
+	hal_uart_printf("REG_RX_PW_P4 %X\r\n", radioReadReg(REG_RX_PW_P4));
+	hal_uart_printf("REG_RX_PW_P5 %X\r\n", radioReadReg(REG_RX_PW_P5));
+	hal_uart_printf("REG_FIFO_STATUS %X\r\n", radioReadReg(REG_FIFO_STATUS));
+	hal_uart_printf("REG_DYNPD %X\r\n", radioReadReg(REG_DYNPD));
+	hal_uart_printf("REG_FEATURE %X\r\n", radioReadReg(REG_FEATURE));
+}
+//- jason.kim 2016.10.25 New APIs

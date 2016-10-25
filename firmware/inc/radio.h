@@ -66,6 +66,14 @@ void radioTxPacketNoAck(__xdata uint8_t *payload, uint8_t len);
 void radioAckPacket(uint8_t pipe, __xdata uint8_t* payload, uint8_t len);
 uint8_t radioRxPacket(__xdata uint8_t *payload);
 
+//+ jason.kim 2016.10.25 New APIs
+bool radioIsRxReady(uint8_t *pipe);
+void radioSetAutoAck(bool enable);
+void radioEnableDynamicPayloads(void);
+void radioEnableAckPayload(void);
+void printDetails(void);
+//- jason.kim 2016.10.25 New APIs
+
 #define ARD_RAW 0
 #define ARD_PLOAD 0x80
 

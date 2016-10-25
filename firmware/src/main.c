@@ -40,6 +40,9 @@
 #include "ppm.h"
 #endif
 #include "hal_uart.h"
+#include "keyboard.h"
+
+#define DEBUG_EN
 
 //Compilation seems bugged on SDCC 3.1, imposing 3.2
 //Comment-out the three following lines only if you know what you are doing!
@@ -85,51 +88,6 @@ void putstring(char *s)
   while(*s != 0)
     putchar(*s++);
 }
-
-void printDetails(void)
-{
-	hal_uart_printf("REG_CONFIG %X\r\n", radioReadReg(REG_CONFIG));
-	hal_uart_printf("REG_EN_AA %X\r\n", radioReadReg(REG_EN_AA));
-	hal_uart_printf("REG_EN_RXADDR %X\r\n", radioReadReg(REG_EN_RXADDR));
-	hal_uart_printf("REG_SETUP_AW %X\r\n", radioReadReg(REG_SETUP_AW));
-	hal_uart_printf("REG_SETUP_RETR %X\r\n", radioReadReg(REG_SETUP_RETR));
-	hal_uart_printf("REG_RF_CH %X\r\n", radioReadReg(REG_RF_CH));
-	hal_uart_printf("REG_RF_SETUP %X\r\n", radioReadReg(REG_RF_SETUP));
-	hal_uart_printf("REG_OBSERVE_TX %X\r\n", radioReadReg(REG_OBSERVE_TX));
-	hal_uart_printf("REG_RPD  %X\r\n", radioReadReg(REG_RPD));
-	hal_uart_printf("REG_RX_ADDR_P01 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P02 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P03 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P04 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P05 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P01 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P02 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P03 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P04 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-	hal_uart_printf("REG_RX_ADDR_P05 %X\r\n", radioReadReg(REG_RX_ADDR_P0));
-
-	hal_uart_printf("REG_RX_ADDR_P1 %X\r\n", radioReadReg(REG_RX_ADDR_P1));
-	hal_uart_printf("REG_RX_ADDR_P2 %X\r\n", radioReadReg(REG_RX_ADDR_P2));
-	hal_uart_printf("REG_RX_ADDR_P3 %X\r\n", radioReadReg(REG_RX_ADDR_P3));
-	hal_uart_printf("REG_RX_ADDR_P4 %X\r\n", radioReadReg(REG_RX_ADDR_P4));
-	hal_uart_printf("REG_RX_ADDR_P5 %X\r\n", radioReadReg(REG_RX_ADDR_P5));
-
-	hal_uart_printf("REG_TX_ADDR1 %X\r\n", radioReadReg(REG_TX_ADDR));
-	hal_uart_printf("REG_TX_ADDR2 %X\r\n", radioReadReg(REG_TX_ADDR));
-	hal_uart_printf("REG_TX_ADDR3 %X\r\n", radioReadReg(REG_TX_ADDR));
-	hal_uart_printf("REG_TX_ADDR4 %X\r\n", radioReadReg(REG_TX_ADDR));
-	hal_uart_printf("REG_TX_ADDR5 %X\r\n", radioReadReg(REG_TX_ADDR));
-
-	hal_uart_printf("REG_RX_PW_P0 %X\r\n", radioReadReg(REG_RX_PW_P0));
-	hal_uart_printf("REG_RX_PW_P1 %X\r\n", radioReadReg(REG_RX_PW_P1));
-	hal_uart_printf("REG_RX_PW_P2 %X\r\n", radioReadReg(REG_RX_PW_P2));
-	hal_uart_printf("REG_RX_PW_P3 %X\r\n", radioReadReg(REG_RX_PW_P3));
-	hal_uart_printf("REG_RX_PW_P4 %X\r\n", radioReadReg(REG_RX_PW_P4));
-	hal_uart_printf("REG_RX_PW_P5 %X\r\n", radioReadReg(REG_RX_PW_P5));
-	hal_uart_printf("REG_FIFO_STATUS %X\r\n", radioReadReg(REG_FIFO_STATUS));
-	hal_uart_printf("REG_DYNPD %X\r\n", radioReadReg(REG_DYNPD));
-	hal_uart_printf("REG_FEATURE %X\r\n", radioReadReg(REG_FEATURE));
-}
 //- jason.kim 2016.9.24 Support serial debug
 
 //+ jason.kim 2016.9.24 HID key testing
@@ -141,31 +99,19 @@ typedef struct
 } KeyReport;
 
 KeyReport g_KeyReport;
-void report_key(int k)
+
+void report_hid(uint8_t *report, int size)
 {
-    long i;
     ledSet(LED_RED, true);
-    if (!(IN2CS&EPBSY)) {
-        g_KeyReport.keys[0] = k;
-  	    hal_uart_printf("sizeof g_KeyReport %d\r\n", (int)sizeof(g_KeyReport));
-        memcpy(IN2BUF, &g_KeyReport, sizeof(g_KeyReport));
-        IN2BC = sizeof(g_KeyReport);
-
-        for (i=0; i<10000; i++) {
-            __asm__ (" nop");
-        }
-
-        g_KeyReport.keys[0] = 0;
-        memcpy(IN2BUF, &g_KeyReport, sizeof(g_KeyReport));
-        // while (IN2CS&EPBSY);
-        IN2BC = sizeof(g_KeyReport);
-    }
+    while ((IN2CS&EPBSY));
+    memcpy(IN2BUF, report, size);
+    IN2BC = size;
 }
 //- jason.kim 2016.9.24 HID key testing
 
 void main()
 {
-  mode = MODE_LEGACY;
+  mode = MODE_PRX;
 
   //Init the chip ID
   initId();
@@ -186,7 +132,9 @@ void main()
     P0DIR &= ~(1<<CRPA_PA_RXEN);
     P0 |= (1<<CRPA_PA_RXEN);
 #endif
-  radioInit(RADIO_MODE_PTX);
+  radioInit(RADIO_MODE_PRX);
+  init_keyboard();
+
 #ifdef PPM_JOYSTICK
   // Initialise the PPM acquisition
   ppmInit();
@@ -213,14 +161,15 @@ void main()
 
   while(1)
   {
+#if defined(DEBUG_EN)
     // jason.kim 2016.9.24 Support serial debug and key testing
     if( hal_uart_chars_available() )
     {
       // Echo received characters
-      // printDetails();
+      printDetails();
       putchar(getchar());
-      report_key(0x16);
     }
+#endif
 
     if (mode == MODE_LEGACY)
     {
@@ -646,24 +595,15 @@ void cmdRun()
  */
 void prxRun()
 {
-  char tlen;  //Transmit length
+  char len;  //Transmit length
+  uint8_t pipe;
 
-  if (!radioIsRxEmpty())
+  if (radioIsRxReady(&pipe))
   {
     ledTimeout = 2;
     ledSet(LED_GREEN, true);
-    IN1BC = radioRxPacket(IN1BUF);
-  }
-  //Send a packet if something is received on the USB
-  if (!(OUT1CS&EPBSY) && !contCarrier)
-  {
-    //Deactivate the USB IN
-    IN1CS = 0x02;
-    //Fetch the USB data size. Limit it to 32
-    tlen = OUT1BC;
-    if (tlen>32) tlen=32;
-    radioAckPacket(0, OUT1BUF, tlen);
-    //reactivate OUT1
-    OUT1BC=BCDUMMY;
+    len = radioRxPacket(rbuffer);
+    if (len == 8)
+        report_hid(rbuffer, 8);
   }
 }

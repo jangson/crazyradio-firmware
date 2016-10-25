@@ -174,7 +174,7 @@ __code const uint8_t usbHidReportDescriptorKeyboard[HID_REP_DESC_SIZE_KEYBOARD] 
     0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
     0x95, 0x08,                    //   REPORT_COUNT (8)
     0x75, 0x01,                    //   REPORT_SIZE (1)
-    0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
+    0x81, 0x02,                    //   INPUT (Data,Ary,Abs)
     0x95, 0x08,                    //   REPORT_COUNT (8)
     0x75, 0x01,                    //   REPORT_SIZE (1)
     0x81, 0x01,                    //   INPUT (Cnst,Ary,Abs)

@@ -6,16 +6,33 @@ NRFPROG ?= ../nrfProg/nrfProg
 
 VERIFIED ?= 0
 
-CFLAGS = -Iinc/ --model-large --std-sdcc99
+# jason.kim Why '--no-xinit-opt' is needed, if it is not set, global variables is not initialized by sdcc 3.5.0
+# I think it is compiller bug. It looks like the reversed option
+CFLAGS = --no-xinit-opt -Iinc/ --model-large --std-sdcc99
 LDFLAGS = --xram-loc 0x8000 --xram-size 2048 --model-large
 
 VPATH += src/ bin/
 
-OBJS = main.rel radio.rel usb.rel usbDescriptor.rel led.rel utils.rel hal_uart.rel
+OBJS = main.rel radio.rel usb.rel usbDescriptor.rel led.rel utils.rel keyboard.rel
 
 # jason.kim 2016.9.24 Support HID keyboard
 PPM_KEYBOARD = 1
 # PPM_JOYSTICK = 1
+
+#+ jason.kim 2016.10.25 Supports serial debug
+FEATURE_UART = 1
+FEATURE_UART_SYNC = 1
+
+ifdef FEATURE_UART  
+ifneq ($(FEATURE_UART_SYNC), 0)
+CFLAGS += -DFEATURE_UART_SYNC
+OBJS += hal_uart_sync.rel
+else
+CFLAGS += -DFEATURE_UART
+OBJS += hal_uart.rel
+endif
+endif
+#- jason.kim 2016.10.25 Supports serial debug
 
 ifdef PPM_JOYSTICK
 ifneq ($(PPM_JOYSTICK), 0)

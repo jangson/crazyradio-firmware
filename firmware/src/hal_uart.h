@@ -85,7 +85,9 @@ uint8_t hal_uart_getchar(void);
 
 void hal_uart_printf(const char *fmt,...);
 
+#ifndef FEATURE_UART_SYNC
 void UART0_ISR() __interrupt(4);
+#endif
 
 #endif // HAL_UART_H__
 /** @} */

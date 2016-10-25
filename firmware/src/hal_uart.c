@@ -37,7 +37,7 @@ static uint8_t __idata uart_tx[UART_NBUF];
 static uint8_t uart_rx_wp, uart_rx_rp, uart_rx_cnt;
 static uint8_t __idata uart_rx[UART_NBUF];
 
-static uint8_t print_buf[40];
+static uint8_t __xdata print_buf[40];
 
 void UART0_ISR() __interrupt(4)
 {
