@@ -71,6 +71,7 @@ bool radioIsRxReady(uint8_t *pipe);
 void radioSetAutoAck(bool enable);
 void radioEnableDynamicPayloads(void);
 void radioEnableAckPayload(void);
+void radioEnableDynamicAck(void);
 void printDetails(void);
 //- jason.kim 2016.10.25 New APIs
 

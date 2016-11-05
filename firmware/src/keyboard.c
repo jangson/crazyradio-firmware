@@ -34,7 +34,8 @@ void init_keyboard(void)
 {
     radioSetAutoAck(true);
     radioEnableDynamicPayloads();
-    radioEnableAckPayload();
+    // radioEnableAckPayload();
+    // radioEnableDynamicAck();
     radioSetAddress(pipo0_address);
     radioSetDataRate(radio_data_rate);
     radioSetChannel(radio_channel);

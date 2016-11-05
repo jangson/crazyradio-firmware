@@ -127,9 +127,6 @@ void radioInit(enum radioMode_e mode)
 
   //Wait a little while for the radio to be rdy
   for(i=0;i<1000;i++);
-  //Enable dynamic packet size, ack payload, and NOACK command
-  radioWriteReg(REG_FEATURE, 0x07);
-  radioWriteReg(REG_DYNPD, 0x01);
 
   //Set the default radio parameters
   radioUpdateRfSetup();
@@ -506,18 +503,19 @@ void radioSetAutoAck(bool enable)
 
 void radioEnableDynamicPayloads(void)
 {
-  hal_uart_printf("REG_FEATURE %x\r\n", radioReadReg(REG_FEATURE) );
   radioWriteReg(REG_FEATURE, radioReadReg(REG_FEATURE) | (1<<2)); // EN_DPL
-  hal_uart_printf("REG_FEATURE %x\r\n", radioReadReg(REG_FEATURE) );
   radioWriteReg(REG_DYNPD, radioReadReg(REG_DYNPD)|(0x3f)); // DPL_P0~5
 }
 
 void radioEnableAckPayload(void)
 {
-  hal_uart_printf("REG_FEATURE2 %x\r\n", radioReadReg(REG_FEATURE) );
   radioWriteReg(REG_FEATURE, radioReadReg(REG_FEATURE) | ((1<<2) | (1<<1))); // EN_DPL and EN_ACK_PAY
-  hal_uart_printf("REG_FEATURE2 %x\r\n", radioReadReg(REG_FEATURE) );
   radioWriteReg(REG_DYNPD, radioReadReg(REG_DYNPD)|(0x3)); // DPL_P0~1
+}
+
+void radioEnableDynamicAck(void)
+{
+    radioWriteReg(REG_FEATURE, radioReadReg(REG_FEATURE) | (1<<0)); // EN_DYN_ACK
 }
 
 void printDetails(void)
